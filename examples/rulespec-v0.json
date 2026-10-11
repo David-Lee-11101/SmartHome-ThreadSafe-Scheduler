@@ -1,0 +1,5 @@
+[
+  {"id":"close-curtain","description":"Close the curtain when rain is detected","triggers":[{"device":"weather","state":"rain"}],"conditions":[],"actions":[{"device":"curtain","state":"closed"}]},
+  {"id":"notify-curtain-closed","description":"Notify after the curtain closes","triggers":[{"device":"curtain","state":"closed"}],"conditions":[],"actions":[{"device":"notification","state":"sent"}]},
+  {"id":"independent-light","description":"Turn on a desk light when motion is detected","triggers":[{"device":"motion","state":"detected"}],"conditions":[],"actions":[{"device":"desk-light","state":"on"}]}
+]

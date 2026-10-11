@@ -6,9 +6,15 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 public class TaskNode {
     //所属根节点
@@ -27,6 +33,7 @@ public class TaskNode {
     private TreeSet<UUID> actionDevices;
     //根据Trigger推理出规则触发的时间
     private Long timeStamp;
+    private final long sequence;
     //规则执行内容
     private ExecFunc execFunction;
 
@@ -40,6 +47,7 @@ public class TaskNode {
         this.triggerDevices = triggerDevices;
         this.actionDevices = actionDevices;
         this.timeStamp = System.currentTimeMillis();
+        this.sequence = root.nextTaskSequence();
         this.execFunction = execFunction;
         this.hasFinished = new AtomicBoolean(false);
     }
@@ -57,6 +65,15 @@ public class TaskNode {
     }
 
     public void runTask(AtomicBoolean arrivalFlag, AtomicBoolean timeWindowFlag) {
+        runTask(arrivalFlag, timeWindowFlag, 100L);
+    }
+
+    public void runTask(AtomicBoolean arrivalFlag, AtomicBoolean timeWindowFlag, long pollIntervalMillis) {
+        runTask(arrivalFlag, timeWindowFlag, pollIntervalMillis, new CountDownLatch(0));
+    }
+
+    public void runTask(AtomicBoolean arrivalFlag, AtomicBoolean timeWindowFlag, long pollIntervalMillis,
+                        CountDownLatch dependenciesReady) {
 
         //依赖关系生成的时候，必须要加锁。但由于生成依赖很快，此时全局加锁消耗忽略不计
         synchronized (TaskNode.class) {
@@ -65,44 +82,33 @@ public class TaskNode {
             //用于生成依赖关系
             generatingDependency();
         }
-
-        // 生成关系完后就应该释放掉同步锁
-        // 持续等待，监听依赖是否为空
-        while (!dependencies.isEmpty()){
-            try {
-//                System.out.println(this.taskName + " 监听依赖中 " + dependencies.toString());
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+        dependenciesReady.countDown();
+        List<DeviceNode> lockedDevices = new ArrayList<>();
+        try {
+            while (!dependencies.isEmpty()) {
+                try {
+                    Thread.sleep(pollIntervalMillis);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
             }
-        };
 
-
-        //获取设备写锁，保证action的原子性
-        Set<DeviceNode> devices = root.getDeviceNodes();
-        devices.forEach((device) -> {
-            if (actionDevices.contains(device.getDeviceUUID())) {
-                device.getWriteLock().lock();
+            for (DeviceNode device : root.getDeviceNodes()) {
+                if (actionDevices.contains(device.getDeviceUUID())) {
+                    device.getWriteLock().lock();
+                    lockedDevices.add(device);
+                }
             }
-        });
-
-//        System.out.println(this.taskName + " 获取执行设备的写锁成功");
-
-        //进入执行流程，获取锁，然后开始等待窗口
-        executeAction(arrivalFlag, timeWindowFlag);
-        hasFinished.set(true);
-
-        //执行完通知其他TaskNode，同时将自己摘除
-        cleanupDependenciesAndSelf();
-        //在执行完成后将trigger devices与该 taskNode移除
-        root.removeRuleDeviceRelation(triggerDevices, this);
-
-        devices.forEach((device) -> {
-            if (actionDevices.contains(device.getDeviceUUID())) {
-                device.getWriteLock().unlock();
+            executeAction(arrivalFlag, timeWindowFlag, pollIntervalMillis);
+        } finally {
+            hasFinished.set(true);
+            cleanupDependenciesAndSelf();
+            root.removeRuleDeviceRelation(triggerDevices, this);
+            for (int index = lockedDevices.size() - 1; index >= 0; index--) {
+                lockedDevices.get(index).getWriteLock().unlock();
             }
-        });
-//        System.out.println(this.taskName + " 释放执行设备的写锁成功");
+        }
     }
 
     private void generatingDependency() {
@@ -122,7 +128,7 @@ public class TaskNode {
                 device.getTaskNodes().add(this);
                 //根据已有的生成依赖关系
                 device.getTaskNodes().forEach((t) -> {
-                    if (t.timeStamp < this.timeStamp && !t.hasFinished.get()) {
+                    if (t.sequence < this.sequence && !t.hasFinished.get()) {
                         t.notifies.add(this);
                         dependencies.add(t);
                     }
@@ -134,7 +140,7 @@ public class TaskNode {
         Set<TaskNode> taskNodesForTriggerDevices = root.getRuleDeviceRelation().get(triggerDevices);
         if (taskNodesForTriggerDevices != null) {
             taskNodesForTriggerDevices.forEach((taskNode) -> {
-                if (taskNode.getTimeStamp() < this.timeStamp && !taskNode.hasFinished.get()) {
+                if (taskNode.sequence < this.sequence && !taskNode.hasFinished.get()) {
                     taskNode.notifies.add(this);
                     this.dependencies.add(taskNode);
                 }
@@ -151,7 +157,7 @@ public class TaskNode {
 //        System.out.println(this.taskName + "释放了相关设备的读锁 ");
     }
 
-    private void executeAction(AtomicBoolean arrivalFlag, AtomicBoolean timeWindowFlag) {
+    private void executeAction(AtomicBoolean arrivalFlag, AtomicBoolean timeWindowFlag, long pollIntervalMillis) {
 
 //        System.out.println(this.taskName + " 任务开始等待真实action ");
 
@@ -159,7 +165,7 @@ public class TaskNode {
         while (!arrivalFlag.get() && !timeWindowFlag.get()) {
             try {
                 //睡眠等待降低线程占用率
-                Thread.sleep(100);
+                Thread.sleep(pollIntervalMillis);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -207,22 +213,41 @@ public class TaskNode {
     public static class SimpleExecFunc implements ExecFunc {
         private final String taskName;
         private final String description;
+        private final long simulatedWorkMillis;
+        private final Path logPath;
+        private final Runnable completionAction;
+        private final boolean printExecution;
 
         public SimpleExecFunc(String taskName,String description) {
+            this(taskName, description, 100L, null, null, true);
+        }
+
+        public SimpleExecFunc(String taskName, String description, long simulatedWorkMillis,
+                              Path logPath, Runnable completionAction) {
+            this(taskName, description, simulatedWorkMillis, logPath, completionAction, true);
+        }
+
+        public SimpleExecFunc(String taskName, String description, long simulatedWorkMillis,
+                              Path logPath, Runnable completionAction, boolean printExecution) {
             this.taskName = taskName;
             this.description = description;
+            this.simulatedWorkMillis = simulatedWorkMillis;
+            this.logPath = logPath;
+            this.completionAction = completionAction;
+            this.printExecution = printExecution;
         }
 
         @Override
         public void exec() throws InterruptedException {
-            // 这里暂时使用随机时间睡眠模拟规则乱序执行
-            Thread.sleep(ThreadLocalRandom.current().nextInt(100, 1000));
-            System.out.println(taskName + "执行,"+"description: "+description);
-            logTaskExecution(taskName, description);
+            Thread.sleep(simulatedWorkMillis);
+            if (printExecution) System.out.println(taskName + " executed, description: " + description);
+            if (completionAction != null) completionAction.run();
+            if (logPath != null) logTaskExecution(taskName, description);
         }
 
         private void logTaskExecution(String taskName, String description) {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter("E:\\研究生信息收集\\论文材料\\IoT-Event-Proxy\\src\\main\\java\\concurrency\\experiment\\RealUser\\ThreadPool\\json\\execution_log.txt", true))) {
+            try (BufferedWriter writer = Files.newBufferedWriter(logPath, StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
                 writer.write(String.format("%s,%s%n", taskName.substring(taskName.lastIndexOf("-")+1), description));
             } catch (IOException e) {
                 System.err.println("写入日志失败: " + e.getMessage());

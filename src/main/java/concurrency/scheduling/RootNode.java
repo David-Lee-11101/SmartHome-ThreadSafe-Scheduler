@@ -3,11 +3,17 @@ package concurrency.scheduling;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class RootNode {
     private CopyOnWriteArraySet<DeviceNode> deviceNodes = new CopyOnWriteArraySet<>();
     // 用于记录该RootNode下触发规则的 trigger devices 和 rule task 之间的关系
     private ConcurrentHashMap<Set<UUID>, Set<TaskNode>> ruleDeviceRelation = new ConcurrentHashMap<>();
+    private final AtomicLong taskSequence = new AtomicLong();
+
+    public long nextTaskSequence() {
+        return taskSequence.getAndIncrement();
+    }
 
     // 获取 deviceNodes 集合
     public Set<DeviceNode> getDeviceNodes() {
