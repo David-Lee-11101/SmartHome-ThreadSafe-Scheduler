@@ -7,9 +7,7 @@ import concurrency.scheduling.TaskNode;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.BufferedWriter;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -33,6 +31,10 @@ public class RealUserPriorityExecutor {
         public PriorityRunnable(int priority, Runnable task) {
             this.priority = priority;
             this.task = task;
+        }
+
+        public int getPriority() {
+            return priority;
         }
 
         @Override
@@ -59,6 +61,7 @@ public class RealUserPriorityExecutor {
         );
 
         Gson gson = new Gson();
+        List<RuleTree.TaskHandle> handles = Collections.synchronizedList(new ArrayList<>());
         // 读取设备
         List<DeviceInfo> devices = gson.fromJson(new FileReader(devicesFilePath), new TypeToken<List<DeviceInfo>>() {}.getType());
         // 读取规则
@@ -100,8 +103,8 @@ public class RealUserPriorityExecutor {
                     }
 
                     // 创建任务
-                    ruleTree.createTask("Rule-"+rule.getId(), triggerDevices, actionDevices,
-                            new TaskNode.SimpleExecFunc("Rule-"+rule.getId(),rule.getDescription()));
+                    handles.add(ruleTree.createTask("Rule-"+rule.getId(), triggerDevices, actionDevices,
+                            new TaskNode.SimpleExecFunc("Rule-"+rule.getId(),rule.getDescription())));
 
                 } catch (Exception e) {
                     System.err.println("任务执行失败: " + e.getMessage());
@@ -111,15 +114,26 @@ public class RealUserPriorityExecutor {
         }
         // 关闭线程池
         executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+                throw new IOException("rule submission did not finish within 30 seconds");
+            }
+            for (RuleTree.TaskHandle handle : handles) {
+                if (!handle.await(15_000L)) throw new IOException("scheduled rule did not complete");
+            }
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            throw new IOException("interrupted while waiting for scheduled rules", interrupted);
+        }
     }
 
     public static void main(String[] args) {
+        if (args.length != 2) {
+            System.err.println("Usage: RealUserPriorityExecutor <devices.json> <rules.json>");
+            System.exit(2);
+        }
         try {
-            // 清空执行日志
-            BufferedWriter writer = new BufferedWriter(new FileWriter("E:\\研究生信息收集\\论文材料\\IoT-Event-Proxy\\src\\main\\java\\concurrency\\experiment\\RealUser\\ThreadPool\\json\\execution_log.txt", false));
-            writer.close();
-            // 运行任务
-            runTasks("E:\\研究生信息收集\\论文材料\\IoT-Event-Proxy\\src\\main\\java\\concurrency\\experiment\\RealUser\\ThreadPool\\json\\devices.json","E:\\研究生信息收集\\论文材料\\IoT-Event-Proxy\\src\\main\\java\\concurrency\\experiment\\RealUser\\ThreadPool\\json\\rules.json");
+            runTasks(args[0], args[1]);
         } catch (IOException e) {
             System.err.println("运行任务失败: " + e.getMessage());
             e.printStackTrace();

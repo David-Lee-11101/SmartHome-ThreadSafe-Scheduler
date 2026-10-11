@@ -18,11 +18,15 @@ import java.util.stream.Collectors;
 public class RulesExecGenerator {
 
     public static void main(String[] args) {
+        if (args.length != 3) {
+            System.err.println("Usage: RulesExecGenerator <devices-file> <sync-log> <output-java-file>");
+            System.exit(2);
+        }
         try {
             // 1. 解析 device
-            List<DeviceInfo> deviceList = parseDeviceFile("src/main/java/concurrency/experiment/RealUser/Freemarker/RealUserDevice.txt");
+            List<DeviceInfo> deviceList = parseDeviceFile(args[0]);
             // 2. 解析 rule
-            List<RuleInfo> ruleList = parseRulesLog("E:\\研究生信息收集\\论文材料\\IoT-Event-Detector\\Detector\\Sequence\\RealUser\\CheckSequence\\synclogs.txt");
+            List<RuleInfo> ruleList = parseRulesLog(args[1]);
             // 3. 初始化 FreeMarker
             Configuration cfg = new Configuration(Configuration.VERSION_2_3_31);
             cfg.setDirectoryForTemplateLoading(new File("src/main/java/concurrency/experiment/RealUser/Freemarker/template"));
@@ -34,7 +38,7 @@ public class RulesExecGenerator {
             dataModel.put("devices", deviceList);
             dataModel.put("rules", ruleList);
             // 6. 生成 Main.java
-            File outFile = new File("src/main/java/concurrency/experiment/RealUser/Freemarker/RealUserRuleExec.java");
+            File outFile = new File(args[2]);
             try (Writer out = new FileWriter(outFile)) {
                 template.process(dataModel, out);
             }

@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: maven
+      - name: Test and package
+        run: mvn --batch-mode --no-transfer-progress verify
+      - name: Run deterministic simulation
+        run: >-
+          mvn --batch-mode --no-transfer-progress -q exec:java
+          -Dexec.mainClass=concurrency.demo.SmartRuleSimulationDemo
+          -Dexec.args=examples/rulespec-v0.json
