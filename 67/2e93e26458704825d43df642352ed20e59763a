@@ -1,0 +1,91 @@
+src/test/java/concurrency/demo/RuleSpecTest.java
+  s_7011714e525495::t_be717ff5d3a58a 7,40-56
+  s_7011714e525495::t_e246e50dbca57e 23-35,39,57
+  s_7011714e525495::t_e8802ce9833cc4 36-38
+  s_7011714e525495::t_9f34e7a91864fe 1-6,8-22,58
+.github/workflows/ci.yml
+  s_7011714e525495::t_ea67622d377aa5 1-26
+README.md
+  s_7011714e525495::t_f9ea1a3527bab9 3
+  s_7011714e525495::t_ea67622d377aa5 4-69
+  s_7011714e525495::t_2e50aa300fedf4 1-2
+src/main/java/concurrency/experiment/RealUser/ThreadPool/RealUserPriorityExecutor.java
+  s_7011714e525495::t_d2eb63646f34f6 64,106-107,117-127,131-134,136
+  s_7011714e525495::t_a59ea6e5e3ab74 36-39
+src/test/java/concurrency/experiment/RealUserPriorityExecutorTest.java
+  s_7011714e525495::t_b690ca8265c393 1-18
+pom.xml
+  s_7011714e525495::t_b690ca8265c393 19-23,62-68,74-77
+  s_7011714e525495::t_f9ea1a3527bab9 8
+  s_7011714e525495::t_ea67622d377aa5 69-73
+  s_7011714e525495::t_1eed29ca1dd614 18
+src/main/java/concurrency/demo/RuleSpec.java
+  s_7011714e525495::t_9f34e7a91864fe 1-16,20,23,25-28,30-32,39-49,52,54-59
+  s_7011714e525495::t_e8802ce9833cc4 17-18,29,50-51
+  s_7011714e525495::t_c652205d2779f8 19,21-22,24,33-38,53
+.gitignore
+  s_7011714e525495::t_108068bbecded6 3,6-7,10
+  s_7011714e525495::t_ea67622d377aa5 1,5,12-13
+examples/rulespec-v0.json
+  s_7011714e525495::t_9f34e7a91864fe 1-5
+src/main/java/concurrency/scheduling/RootNode.java
+  s_7011714e525495::t_edc7357338f533 6,12-16
+src/main/java/concurrency/experiment/RealUser/ThreadPool/SyncLogParser.java
+  s_7011714e525495::t_d84e0984a08c68 59-63
+src/main/java/concurrency/experiment/RealUser/Freemarker/RulesExecGenerator.java
+  s_7011714e525495::t_d84e0984a08c68 21-24,27,29,41
+src/main/java/concurrency/scheduling/RuleTree.java
+  s_7011714e525495::t_c652205d2779f8 9,37,42-43,45,86,114,117-118,124,132-134,141-146
+  s_7011714e525495::t_df76456a165fde 68-71,75
+  s_7011714e525495::t_eb26d83a7976d8 129-131,136
+  s_7011714e525495::t_015eb1b5959793 3-7,11,13-15,17-19,21-25,28,31-35,38-40,44,46-63,65-66,77-85,87,89-106,108-113,115-116,119-123,125,127-128,139-140
+  s_7011714e525495::t_edc7357338f533 36,41,67,72-74,76
+src/main/java/concurrency/scheduling/TaskNode.java
+  s_7011714e525495::t_edc7357338f533 12,36,50,72-76,85,131,143
+  s_7011714e525495::t_df76456a165fde 9-10,86-94,97-101,103-109,111
+  s_7011714e525495::t_da5520e20c1674 219,222,227-231,237,243
+  s_7011714e525495::t_a59ea6e5e3ab74 14-17,68-71,160,168,216-218,223-226,234-236,242,244-245,249-250
+src/main/java/concurrency/demo/SmartRuleSimulationDemo.java
+  s_7011714e525495::t_e4cd2e733ec21b 46
+  s_7011714e525495::t_da5520e20c1674 113,121-123
+  s_7011714e525495::t_2d1784128e1cb6 15-17,22
+  s_7011714e525495::t_99e7ce40b4560f 29-32,56,79
+  s_7011714e525495::t_be717ff5d3a58a 4-7,12,41,43-45,47-49,51-55,57-78,80-94
+  s_7011714e525495::t_9f34e7a91864fe 1-3,8-11,13-14,18-21,23-28,33-40,42,50,95-112,114-120,124-140
+src/test/java/concurrency/scheduling/RuleTreeTest.java
+  s_7011714e525495::t_8267cdeafffac7 65-87
+  s_7011714e525495::t_e246e50dbca57e 88-106
+  s_7011714e525495::t_b690ca8265c393 1-64,107-133
+.github/ISSUE_TEMPLATE/bug.yml
+  s_7011714e525495::t_a48750a25f8425 1-45
+.github/ISSUE_TEMPLATE/config.yml
+  s_7011714e525495::t_7d67a7112b1823 1-5
+.github/ISSUE_TEMPLATE/documentation.yml
+  s_7011714e525495::t_048b2caa4cf3f0 1-23
+.github/ISSUE_TEMPLATE/feature.yml
+  s_7011714e525495::t_761cfa0e5df90d 1-29
+.github/pull_request_template.md
+  s_7011714e525495::t_6dd701a24025e3 1-24
+CONTRIBUTING.md
+  s_7011714e525495::t_abcb4e04852e8b 1-23
+SECURITY.md
+  s_7011714e525495::t_288f520a9a77a2 1-13
+assets/hero.svg
+  s_7011714e525495::t_5cfd3dc9063bfe 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "672e93e26458704825d43df642352ed20e59763a",
+  "prompts": {},
+  "sessions": {
+    "s_7011714e525495": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12529-718f-7053-849a-2fa10f2720ee",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "恺撒 <weihaodong@xiaohongshu.com>"
+    }
+  }
+}
