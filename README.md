@@ -1,30 +1,41 @@
-![SmartRule-Concurrency-Scheduler architecture card](assets/hero.svg)
+![SmartHome Thread-safe Scheduler architecture card](assets/hero.svg)
 
-# SmartRule-Concurrency-Scheduler
+# SmartHome-ThreadSafe-Scheduler
 
-An experimental Java scheduler for studying concurrent IoT automation rules. It maps trigger and action devices into dependency relationships, serializes competing device writes, and simulates whether a real action arrives within a bounded time window.
-
-> **Research status:** this repository contains a deterministic demonstration path and historical experiments. It is not a production device runtime, message broker, or safety controller.
-
-## Why it exists
-
-Independent automation rules can target the same device or form implicit chains: one rule changes a device that triggers another. This project explores how those rules can be scheduled without overlapping writes and how action-arrival windows affect completion.
+A conflict-aware execution kernel for smart-home service actions. It turns an already-produced `ProfileEvidence` and a typed `SchedulePlan` into a persisted policy decision, then executes only authorized actions under stable read/write resource ordering, lock-time condition revalidation, deadlines, and cooperative cancellation.
 
 ```mermaid
 flowchart LR
-    JSON[RuleSpec v0 JSON] --> Demo[Deterministic demo adapter]
-    Demo --> Tree[RuleTree]
-    Tree --> Dependencies[Trigger and action dependencies]
-    Dependencies --> Locks[Per-device write locks]
-    Locks --> Window[Arrival or timeout window]
-    Window --> Result[Simulation result]
+    Plan[Typed SchedulePlan] --> Validate[Acyclic bounded validation]
+    Evidence[Exact ProfileEvidence] --> Policy[Evidence policy]
+    Validate --> Policy
+    Policy --> Persist[Persist SchedulingDecision]
+    Persist -->|proceed or reorder| Locks[Stable resource order]
+    Locks --> Revalidate[Condition revalidation]
+    Revalidate --> Handler[Transport ActionHandler]
+    Handler --> Events[Sequenced ExecutionEvents]
+    Persist -->|defer or abstain| Stop[No action]
 ```
 
-The governed path uses the existing `RuleTree`, `RootNode`, `DeviceNode`, and `TaskNode` implementation. Random decisions use an injected seeded `Random`; arrival is configured explicitly as a percentage from `0` to `100`. The former `Math.random() <= 2` comparison made a nominal 2% setting effectively unconditional and has been removed.
+## Runtime guarantees covered by tests
 
-## Run the deterministic demo
+- Unknown models, low-confidence, unknown, or ambiguous evidence abstains; anomalous evidence defers.
+- A trusted conflict pattern can produce a deterministic reorder, while dependencies remain validated before execution.
+- The `DecisionStore` completes before the first action callback. Persistence failure authorizes nothing. An unavailable filesystem atomic move propagates failure without replacing the prior decision or starting an action.
+- Resource identifiers are acquired in one stable total order and released in reverse order on success, cancellation, timeout, or failure.
+- Read/read leases may overlap; writes serialize. Opposite declaration order cannot create a lock-order cycle inside this model.
+- Typed wrappers, record depth, catalog versions, evidence hashes, identifiers, timestamps, and pattern vocabularies are validated without coercion before side effects. Duplicate JSON keys are rejected.
+- Conditions are evaluated before waiting and revalidated after the locks are held. Cancellation and deadlines are checked again after condition and event callbacks before invocation.
+- An interrupted action produces one cancelled terminal event and restores the external interrupt flag.
+- Token cancellation while waiting is checked at intervals of at most 25 ms plus scheduling delay, and partial acquisition is cleaned up. Deadline/token termination does not mark the worker thread as externally interrupted.
+- Callback errors emit a bounded error code without endpoints, paths, arguments, or stack details.
+- Ready tasks are selected before execution; no worker waits for a dependency queued behind it in the same pool.
+
+## Run
 
 Requirements: JDK 8+ and Maven 3.8+.
+
+Maven coordinate: `io.smarthome:SmartHome-ThreadSafe-Scheduler:1.0-SNAPSHOT`.
 
 ```bash
 mvn test
@@ -33,37 +44,21 @@ mvn -q exec:java \
   -Dexec.args=examples/rulespec-v0.json
 ```
 
-The demo uses a 100% arrival rate, a fixed seed, and short timing values. It reports completed rule IDs and explicitly reports that conditions are not evaluated. It does not contact devices or external services.
+The existing deterministic simulation remains available for historical behavior. The supported runtime core is under `concurrency.runtime`; transport integration supplies a real `ActionHandler` that invokes the Logic Engine/TinyRPC provider. The runtime refuses an authorized execution if no handler is present instead of reporting fake success.
 
-## RuleSpec v0
+`--handler-class` and `--condition-class` are trusted local orchestration inputs for development and controlled deployment. Never populate them from a contract document, renderer, or network request. Production integration should compile an owned, fixed bridge to the selected transport. `--policy-only` persists a policy decision but does not prove action execution or end-to-end integration.
 
-The portable fixture uses an immutable shape shared with the companion analyzer:
+## Structure
 
-```json
-{
-  "id": "close-curtain",
-  "description": "Close the curtain when rain is detected",
-  "triggers": [{"device": "weather", "state": "rain"}],
-  "conditions": [],
-  "actions": [{"device": "curtain", "state": "closed"}]
-}
-```
+- `src/main/java/concurrency/runtime/` — evidence policy, plan validation, resource locks, ports, decisions, events, and execution engine.
+- `src/main/java/concurrency/scheduling/` — preserved earlier RuleTree simulation.
+- `src/main/java/concurrency/experiment/` — earlier generated and priority experiments.
+- `experiments/historical-synchronization/` — provenance-bound critical-section, mutex, condition-variable, Redis/SQL, and monitor research transferred from the profiler repository.
 
-`conditions` are carried for adapter compatibility but are not applied by this scheduler yet.
+## Guarantee boundary
 
-## Tests
+The tested stable-order resource model prevents lock-order cycles for declared resources. It is not a universal deadlock-freedom or starvation-freedom proof. Cooperative cancellation cleans up scheduler resources but cannot roll back a physical or already-committed external action. Historical SQL `LLSC` experiments are optimistic log validation, not hardware LL/SC or lock-free progress.
 
-The tests lock down percentage validation, guaranteed arrival and non-arrival paths, seeded repeatability, time-window completion, concurrent task completion, priority ordering, and fixture immutability.
+## Rights
 
-Historical Freemarker, ZooKeeper-style data-tree, and real-user experiment code remains for research traceability. Some historical entry points still rely on old local datasets or generated sources and are not part of the supported demo.
-
-## Limitations
-
-- Busy-wait dependency polling remains part of the research scheduler.
-- Rule conditions and device-state verification are not implemented.
-- The demo proves deterministic local scheduling behavior, not distributed correctness or performance.
-- No benchmark or production reliability claim is made.
-
-## License
-
-No open-source license has been selected yet. Copyright remains with the repository owner; reuse is not granted until a license is added.
+Source is available for inspection. No new reuse license is granted. GitHub Terms of Service rights for viewing and platform forking still apply; third-party packages and historical material retain their own notices and rights. See `RIGHTS.md`.
