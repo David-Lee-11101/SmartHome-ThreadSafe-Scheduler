@@ -1,0 +1,197 @@
+docs/CLEANUP_PLAN.md
+  s_7011714e525495::t_d70ced9a968beb 1-22
+src/main/java/concurrency/runtime/SchedulerPorts.java
+  s_7011714e525495::t_a3fba7f5cccb8b 11
+  s_7011714e525495::t_e4e7220dc3c8a9 1-6,8-10,12-25
+  s_7011714e525495::t_69bf5e45e723de 7
+experiments/historical-synchronization/README.md
+  s_7011714e525495::t_0fe0b709565101 1-7
+docs/CONTRACT_BASELINE.md
+  s_7011714e525495::t_2b5ab11977879e 1-9
+  s_7011714e525495::t_62faad1b68190f 10-14
+RIGHTS.md
+  s_7011714e525495::t_280de2262f3aa0 1-5
+src/main/java/concurrency/adapter/ContractJson.java
+  s_7011714e525495::t_d4cb6e4e58cd33 66-72,75,77,175-184
+  s_7011714e525495::t_2b5ab11977879e 1-16,18-65,73-74,76,78-101,103-106,133-174,185-195
+  s_7011714e525495::t_1f4ee29cc8dd5e 17,102,107-132
+src/main/java/concurrency/runtime/SchedulingDecision.java
+  s_7011714e525495::t_e4e7220dc3c8a9 1-47
+src/main/java/concurrency/runtime/ProfileEvidence.java
+  s_7011714e525495::t_e4e7220dc3c8a9 1-61
+experiments/historical-synchronization/source/Mutex/CS/Command/SendOrder.py
+  s_7011714e525495::t_01c984d5870914 1-252
+experiments/historical-synchronization/source/Mutex/CS/Command/Data/yeelight_order
+  s_7011714e525495::t_b5f23609dee8c3 1-9
+src/main/java/concurrency/runtime/ResourceLockManager.java
+  s_7011714e525495::t_e4e7220dc3c8a9 1-72
+src/main/java/concurrency/runtime/EvidencePolicy.java
+  s_7011714e525495::t_d3a058dcf320a3 13,17-18,20,29-30
+  s_7011714e525495::t_ed131f04539d45 46,50,62,73
+  s_7011714e525495::t_f6bf98a74736d3 45
+  s_7011714e525495::t_e4e7220dc3c8a9 1-12,14-16,19,21-28,31-44,47-49,51-61,63-72,74-80
+experiments/historical-synchronization/source/Mutex/CS/Command/CreateRule.py
+  s_7011714e525495::t_01c984d5870914 1-249
+src/main/java/concurrency/runtime/SchedulerEngine.java
+  s_7011714e525495::t_d4cb6e4e58cd33 98-100,102
+  s_7011714e525495::t_e4e7220dc3c8a9 1-4,6,8-37,39-41,47-55,57-63,69-70,72-77,79,81-97,101,103-115
+  s_7011714e525495::t_a3fba7f5cccb8b 5,7,38,42-46,64-68,78,80
+  s_7011714e525495::t_69bf5e45e723de 56,71
+.github/workflows/ci.yml
+  s_7011714e525495::t_5c81ecaeef8c92 22-23
+experiments/historical-synchronization/source/Mutex/CS/Command/GetDevice.py
+  s_7011714e525495::t_01c984d5870914 1-245
+.github/ISSUE_TEMPLATE/config.yml
+  s_7011714e525495::t_dbc1de73ba45c4 4
+assets/hero.svg
+  s_7011714e525495::t_8ff382ea9e8099 2-3
+src/test/java/concurrency/runtime/SchedulerEngineTest.java
+  s_7011714e525495::t_e4e7220dc3c8a9 1-28,30-36,98-101,103-107,109-116,118-121,123-133,136-144,146-211,226-228,231-257
+  s_7011714e525495::t_3669ec94dd4d76 64-97
+  s_7011714e525495::t_f80c97e0b0471c 37-40,42-51,53-56,58-63,212-223,225
+  s_7011714e525495::t_a3fba7f5cccb8b 29,41,52,57,102,108,117,122,135,145,224
+  s_7011714e525495::t_69bf5e45e723de 134
+  s_7011714e525495::t_d3a058dcf320a3 229-230
+experiments/historical-synchronization/PROVENANCE.json
+  s_7011714e525495::t_0fe0b709565101 1-10
+src/main/java/concurrency/adapter/SchedulerCli.java
+  s_7011714e525495::t_2b5ab11977879e 1-12,16-45,47-49,58-60,62-99
+  s_7011714e525495::t_1f4ee29cc8dd5e 13-15,46,50-57,61
+experiments/historical-synchronization/source/Mutex/CS/Command/TrafficDecrypt.py
+  s_7011714e525495::t_65376840de2e1b 1-17
+src/main/java/concurrency/runtime/SchedulePlan.java
+  s_7011714e525495::t_69bf5e45e723de 13,16-19,27-28,72-88
+  s_7011714e525495::t_e4e7220dc3c8a9 1-12,14-15,20-26,29-71,89-145
+tools/check_historical_safety.py
+  s_7011714e525495::t_20edfb211dcafc 8,22
+  s_7011714e525495::t_e92616624d69d7 12-20,47
+  s_7011714e525495::t_5c81ecaeef8c92 1-7,9-11,21,23-46,48-71
+.gitignore
+  s_7011714e525495::t_34b81206780f82 15-17
+pom.xml
+  s_7011714e525495::t_0fe0b709565101 8
+src/test/java/concurrency/adapter/ContractJsonTest.java
+  s_7011714e525495::t_62faad1b68190f 18,22-23
+  s_7011714e525495::t_d4cb6e4e58cd33 43-52,67
+  s_7011714e525495::t_1f4ee29cc8dd5e 4,53-66
+  s_7011714e525495::t_f80c97e0b0471c 1-3,5-17,19-21,24-42,68
+README.md
+  s_7011714e525495::t_280de2262f3aa0 60
+  s_7011714e525495::t_d4cb6e4e58cd33 45
+  s_7011714e525495::t_b0b03e11bb319a 1,3,5,9-17,20,22-32,43,47,49-52,54,56,58
+experiments/historical-synchronization/source/CV/Message/__init__.py
+  s_7011714e525495::t_bc80f63f42c7f5 1-264
+src/main/java/concurrency/runtime/ExecutionEvent.java
+  s_7011714e525495::t_5b5f3ed995b8bd 3-4,14,17,24,33
+  s_7011714e525495::t_e4e7220dc3c8a9 1-2,5-13,15-16,18-23,25-32,34
+experiments/historical-synchronization/source/CV/Graph/NumAnalysis.py
+  s_7011714e525495::t_cb17900c55738b 1-128
+experiments/historical-synchronization/source/CV/Graph/TimeAnalysis.py
+  s_7011714e525495::t_b021d3a9e3d37e 1-200
+experiments/historical-synchronization/source/CV/LLSC/__init__.py
+  s_7011714e525495::t_2756b08b18a287 1-133
+experiments/historical-synchronization/source/CV/NumOperations.py
+  s_7011714e525495::t_9d835f5cc66e80 1-94
+experiments/historical-synchronization/source/CV/RuleSet/__init__.py
+  s_7011714e525495::t_e07f8d6acaec64 1-401
+experiments/historical-synchronization/source/CV/StaticSimulation.py
+  s_7011714e525495::t_c538354bc66557 1-182
+experiments/historical-synchronization/source/CV/UserScenario.py
+  s_7011714e525495::t_c284137fa822cb 1-204
+experiments/historical-synchronization/source/CV/WIthCV_TALOCK.py
+  s_7011714e525495::t_a5a678f8c41041 1-399
+experiments/historical-synchronization/source/CV/WithCV.py
+  s_7011714e525495::t_872f13461b6d87 1-392
+experiments/historical-synchronization/source/CV/WithCVTimeOperations.py
+  s_7011714e525495::t_6796a46e130bf6 1-50
+experiments/historical-synchronization/source/CV/WithOutCV_LLSC.py
+  s_7011714e525495::t_7535a49b4662f9 1-342
+experiments/historical-synchronization/source/CV/WithOutCV_TALOCK.py
+  s_7011714e525495::t_6b64d8cf076940 1-358
+experiments/historical-synchronization/source/Monitor/Graph/NumAnalysis.py
+  s_7011714e525495::t_7921c58f3e4b55 1-108
+experiments/historical-synchronization/source/Monitor/Graph/TimeAnalysis.py
+  s_7011714e525495::t_5906f4fc77b11d 1-196
+experiments/historical-synchronization/source/Monitor/InMonitor.py
+  s_7011714e525495::t_0d79a003dbd427 1-99
+experiments/historical-synchronization/source/Monitor/OutMonitor.py
+  s_7011714e525495::t_be9507931b666b 1-99
+experiments/historical-synchronization/source/Monitor/ProcessDAG.py
+  s_7011714e525495::t_aeaf3ae908b3a6 1-150
+experiments/historical-synchronization/source/Monitor/RuleSet/__init__.py
+  s_7011714e525495::t_3b86916f8feace 1-401
+experiments/historical-synchronization/source/Monitor/StaticSimulation.py
+  s_7011714e525495::t_f201f30d4a7f7c 1-188
+experiments/historical-synchronization/source/Monitor/TimeNumOperations.py
+  s_7011714e525495::t_e4e1b9d8e9fdf9 1-284
+experiments/historical-synchronization/source/Mutex/CS/Command/MutualOrder.py
+  s_7011714e525495::t_eb4ef366f2fbad 1-422
+experiments/historical-synchronization/source/Mutex/CS/Command/RaceOrder.py
+  s_7011714e525495::t_2719f25dec18ac 1-349
+experiments/historical-synchronization/source/Mutex/CS/Size/DeviceName.py
+  s_7011714e525495::t_9533baf06320bf 1-141
+experiments/historical-synchronization/source/Mutex/CS/Size/DeviceType.py
+  s_7011714e525495::t_89172d582450d6 1-135
+experiments/historical-synchronization/source/Mutex/CS/Size/Graph/CategoryTimeAnalysis.py
+  s_7011714e525495::t_16be5a4b24c857 1-140
+experiments/historical-synchronization/source/Mutex/CS/Size/Graph/EntropyAnalysis.py
+  s_7011714e525495::t_73487f0a658c43 1-546
+experiments/historical-synchronization/source/Mutex/CS/Size/Graph/MultiEntropyAnalysis.py
+  s_7011714e525495::t_e1302742614474 1-509
+experiments/historical-synchronization/source/Mutex/CS/Size/Graph/TimeAnalysis.py
+  s_7011714e525495::t_0f2cf354bcadd3 1-69
+experiments/historical-synchronization/source/Mutex/CS/Size/Home.py
+  s_7011714e525495::t_1845bd15f4daed 1-137
+experiments/historical-synchronization/source/Mutex/CS/Size/Room.py
+  s_7011714e525495::t_411ec0b1fd03dd 1-136
+experiments/historical-synchronization/source/Mutex/CS/Size/RuleSet/__init__.py
+  s_7011714e525495::t_88a32f7a5d6444 1-380
+experiments/historical-synchronization/source/Mutex/LLSC/DBMyISAM.py
+  s_7011714e525495::t_9fbd569b1927bf 1-131
+experiments/historical-synchronization/source/Mutex/LLSC/DataBase.py
+  s_7011714e525495::t_1946e2e20961e7 1-168
+experiments/historical-synchronization/source/Mutex/LLSC/Graph/DrawingType.py
+  s_7011714e525495::t_e35983d5a7c1da 1-88
+experiments/historical-synchronization/source/Mutex/LLSC/Graph/NumAnalysis.py
+  s_7011714e525495::t_049f1d016acde1 1-92
+experiments/historical-synchronization/source/Mutex/LLSC/Graph/PlotAnalysis.py
+  s_7011714e525495::t_66efabd86aeefa 1-239
+experiments/historical-synchronization/source/Mutex/LLSC/Graph/PlotLockFreeAnalysis.py
+  s_7011714e525495::t_99fbdca19827b9 1-94
+experiments/historical-synchronization/source/Mutex/LLSC/Graph/PlotLockOutAnalysis.py
+  s_7011714e525495::t_835549fe38931d 1-101
+experiments/historical-synchronization/source/Mutex/LLSC/Graph/PlotLockWithAnalysis.py
+  s_7011714e525495::t_c8aee6de7b88a1 1-118
+experiments/historical-synchronization/source/Mutex/LLSC/LockFree.py
+  s_7011714e525495::t_ad21e2fefe0565 1-244
+experiments/historical-synchronization/source/Mutex/LLSC/LockFreeMyISAM.py
+  s_7011714e525495::t_05a81789fb64e7 1-186
+experiments/historical-synchronization/source/Mutex/LLSC/LockOut.py
+  s_7011714e525495::t_a7aad5f9194dd4 1-148
+experiments/historical-synchronization/source/Mutex/LLSC/LockWith.py
+  s_7011714e525495::t_7035289ef00ae8 1-229
+experiments/historical-synchronization/source/Mutex/LLSC/RuleSet/__init__.py
+  s_7011714e525495::t_53013c1d22e4ec 1-507
+experiments/historical-synchronization/source/Mutex/LLSC/StatusMapping.py
+  s_7011714e525495::t_d5866fba838226 1-78
+src/test/resources/contracts/v1/profile-evidence.json
+  s_7011714e525495::t_c3e8d637ac0297 1-29
+src/test/resources/contracts/v1/schedule-plan.json
+  s_7011714e525495::t_6f4729be95923b 1-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "481136cc3db8e67709d4d937af8977ce6f7b8063",
+  "prompts": {},
+  "sessions": {
+    "s_7011714e525495": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12529-718f-7053-849a-2fa10f2720ee",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "David Lee <109534658+David-Lee-11101@users.noreply.github.com>"
+    }
+  }
+}
