@@ -27,7 +27,7 @@ public final class ContractJson {
     public static final String CATALOG_VERSION = "1.0.1";
     public static final String HUB_COMMIT = "ff569fdb97a7ad1f2a33665bd3eaceb1bcd28075";
     public static final String API_SHA256 = "a6b41f12ea80d2ea4872a34fd7c8b638ad6d4be19e14695ad0bd9dcb99a4365e";
-    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final ObjectMapper JSON = new ObjectMapper().enable(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
 
     private ContractJson() { }
 
@@ -41,7 +41,7 @@ public final class ContractJson {
             JsonNode action = task.get("action");
             requireObject(action, "action", "serviceId", "operation", "arguments");
             List<Object> arguments = new ArrayList<>();
-            for (JsonNode argument : array(action, "arguments")) arguments.add(JSON.convertValue(argument, Object.class));
+            for (JsonNode argument : array(action, "arguments")) arguments.add(typedValue(argument, 0));
             tasks.add(new SchedulePlan.Task(text(task, "taskId"), strings(task, "dependencies"),
                     strings(task, "readResources"), strings(task, "writeResources"),
                     new SchedulePlan.Action(text(action, "serviceId"), text(action, "operation"), arguments)));
@@ -50,9 +50,13 @@ public final class ContractJson {
         for (JsonNode condition : array(root, "conditions")) {
             requireObject(condition, "condition", "conditionId", "nodeId", "expected");
             conditions.add(new SchedulePlan.Condition(text(condition, "conditionId"),
-                    text(condition, "nodeId"), JSON.convertValue(condition.get("expected"), Object.class)));
+                    text(condition, "nodeId"), typedValue(condition.get("expected"), 0)));
         }
-        return new SchedulePlan(text(root, "planId"), root.get("deadlineEpochMs").longValue(), tasks, conditions);
+        JsonNode deadline = root.get("deadlineEpochMs");
+        if (!deadline.isIntegralNumber() || !deadline.canConvertToLong() || deadline.longValue() <= 0) {
+            throw new IllegalArgumentException("deadlineEpochMs must be a positive bounded integer");
+        }
+        return new SchedulePlan(text(root, "planId"), deadline.longValue(), tasks, conditions);
     }
 
     public static ProfileEvidence readEvidence(Path path) throws IOException {
@@ -67,14 +71,34 @@ public final class ContractJson {
         requireObject(ambiguity, "ambiguity", "detected", "candidateLabels");
         requireBoolean(anomaly, "detected");
         requireBoolean(ambiguity, "detected");
-        text(anomaly, "reason");
-        strings(ambiguity, "candidateLabels");
+        identifier(text(root, "traceId"));
+        if (!text(root, "fixtureHash").matches("[a-f0-9]{64}")) throw new IllegalArgumentException("invalid fixtureHash");
+        requireNumber(root, "distance");
+        if (!Double.isFinite(root.get("distance").doubleValue()) || root.get("distance").doubleValue() < 0) {
+            throw new IllegalArgumentException("distance must be finite and non-negative");
+        }
+        String produced = text(root, "producedAt");
+        if (!produced.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z")) {
+            throw new IllegalArgumentException("producedAt must be UTC RFC3339");
+        }
+        try { Instant.parse(produced); } catch (java.time.DateTimeException invalid) {
+            throw new IllegalArgumentException("producedAt is invalid", invalid);
+        }
+        String reason = text(anomaly, "reason");
+        if (reason.length() > 256 || (anomaly.get("detected").booleanValue() && reason.isEmpty())) {
+            throw new IllegalArgumentException("anomaly reason is invalid");
+        }
+        List<String> candidates = strings(ambiguity, "candidateLabels");
+        for (String candidate : candidates) identifier(candidate);
+        if (ambiguity.get("detected").booleanValue() && new HashSet<>(candidates).size() < 2) {
+            throw new IllegalArgumentException("ambiguity needs two distinct candidates");
+        }
         requireNumber(root, "confidence");
         List<ProfileEvidence.Pattern> patterns = new ArrayList<>();
         for (JsonNode pattern : array(root, "patterns")) {
             requireObject(pattern, "pattern", "kind", "status", "details");
             patterns.add(new ProfileEvidence.Pattern(text(pattern, "kind"), text(pattern, "status")));
-            text(pattern, "details");
+            if (text(pattern, "details").length() > 256) throw new IllegalArgumentException("pattern details too long");
         }
         return new ProfileEvidence(text(root, "profileId"), text(root, "modelVersion"),
                 text(root, "modelHash"), text(root, "label"), root.get("confidence").doubleValue(),
@@ -149,9 +173,43 @@ public final class ContractJson {
         }
     }
 
+    private static void identifier(String value) {
+        if (!value.matches("[A-Za-z][A-Za-z0-9._:-]{2,127}")) throw new IllegalArgumentException("invalid identifier");
+    }
+
+    private static Object typedValue(JsonNode wrapper, int recordDepth) {
+        requireObject(wrapper, "typed value", "type", "value");
+        String type = text(wrapper, "type");
+        JsonNode value = wrapper.get("value");
+        boolean valid;
+        switch (type) {
+            case "boolean": valid = value.isBoolean(); break;
+            case "integer": valid = value.isIntegralNumber(); break;
+            case "number": valid = value.isNumber() && Double.isFinite(value.doubleValue()); break;
+            case "string": valid = value.isTextual(); break;
+            case "null": valid = value.isNull(); break;
+            case "record":
+                valid = value.isObject() && value.size() <= 32 && recordDepth < 4;
+                if (valid) {
+                    java.util.Iterator<String> fields = value.fieldNames();
+                    while (fields.hasNext()) {
+                        String field = fields.next();
+                        if (!field.matches("[A-Za-z][A-Za-z0-9._-]{0,63}")) {
+                            throw new IllegalArgumentException("invalid record field");
+                        }
+                        typedValue(value.get(field), recordDepth + 1);
+                    }
+                }
+                break;
+            default: valid = false;
+        }
+        if (!valid) throw new IllegalArgumentException("typed value does not match declared type or bounds");
+        return JSON.convertValue(wrapper, Object.class);
+    }
+
     private static void requireCatalog(JsonNode root) {
         String version = text(root, "schemaVersion");
-        if (!version.startsWith("1.")) throw new IllegalArgumentException("unsupported contract major version");
+        if (!version.matches("1\\.[0-9]+\\.[0-9]+")) throw new IllegalArgumentException("unsupported contract major version");
     }
 
     private static void requireObject(JsonNode node, String name, String... fields) {

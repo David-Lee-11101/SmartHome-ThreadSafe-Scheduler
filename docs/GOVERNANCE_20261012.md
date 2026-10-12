@@ -8,3 +8,7 @@ Preserve pre-action decision persistence, stable lock ordering, reverse cleanup,
 4. Rerun Maven tests, package checks, and focused diff/static checks.
 
 Fallback inventory: unsupported evidence abstention and anomaly deferral are grounded fail-safe paths covered by tests. No swallowed failures or compatibility bypass is added. No UI change or dependency addition.
+
+## Independent review follow-up
+
+Before further edits, add regressions for malformed typed action/condition values, unchecked evidence fields and enums, malformed versions/deadline coercion, and condition evaluation that cancels or consumes the action deadline. Reject duplicate JSON keys. Preserve validated typed wrappers for the transport bridge. Recheck cancellation/deadline immediately after the final condition callback.

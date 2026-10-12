@@ -73,12 +73,30 @@ public final class SchedulerEngine {
                             "STALE_CONDITION");
                     continue;
                 }
+                if (cancellation.isCancelled()) {
+                    emit(events, executionId, decision, taskId, sequence, ExecutionEvent.State.CANCELLED, "CANCELLED");
+                    break;
+                }
+                if (clock.millis() >= plan.getDeadlineEpochMs()) {
+                    emit(events, executionId, decision, taskId, sequence, ExecutionEvent.State.TIMED_OUT, "DEADLINE_EXCEEDED");
+                    break;
+                }
                 emit(events, executionId, decision, taskId, sequence, ExecutionEvent.State.STARTED, "");
+                if (cancellation.isCancelled()) {
+                    emit(events, executionId, decision, taskId, sequence, ExecutionEvent.State.CANCELLED, "CANCELLED");
+                    break;
+                }
+                if (clock.millis() >= plan.getDeadlineEpochMs()) {
+                    emit(events, executionId, decision, taskId, sequence, ExecutionEvent.State.TIMED_OUT, "DEADLINE_EXCEEDED");
+                    break;
+                }
                 try {
                     actions.invoke(task.getAction(), cancellation);
                     completed++;
                     completedTasks.add(taskId);
                     emit(events, executionId, decision, taskId, sequence, ExecutionEvent.State.COMPLETED, "");
+                } catch (InterruptedException interrupted) {
+                    throw interrupted;
                 } catch (Exception actionFailure) {
                     emit(events, executionId, decision, taskId, sequence, ExecutionEvent.State.FAILED,
                             "ACTION_CALLBACK_FAILED");
@@ -88,9 +106,11 @@ public final class SchedulerEngine {
                 if (!(interrupted instanceof ResourceLockManager.WaitAbortedException)) {
                     Thread.currentThread().interrupt();
                 }
+                boolean cancelled = cancellation.isCancelled()
+                        || !(interrupted instanceof ResourceLockManager.WaitAbortedException);
                 emit(events, executionId, decision, taskId, sequence,
-                        cancellation.isCancelled() ? ExecutionEvent.State.CANCELLED : ExecutionEvent.State.TIMED_OUT,
-                        cancellation.isCancelled() ? "CANCELLED" : "RESOURCE_WAIT_TIMEOUT");
+                        cancelled ? ExecutionEvent.State.CANCELLED : ExecutionEvent.State.TIMED_OUT,
+                        cancelled ? "CANCELLED" : "RESOURCE_WAIT_TIMEOUT");
                 break;
             }
         }

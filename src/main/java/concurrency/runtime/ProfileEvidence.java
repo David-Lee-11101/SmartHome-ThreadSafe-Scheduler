@@ -18,7 +18,8 @@ public final class ProfileEvidence {
                            double confidence, boolean anomaly, boolean ambiguous, List<Pattern> patterns) {
         this.profileId = required(profileId, "profileId");
         this.modelVersion = required(modelVersion, "modelVersion");
-        this.modelHash = required(modelHash, "modelHash");
+        if (modelHash == null || !modelHash.matches("[a-f0-9]{64}")) throw new IllegalArgumentException("invalid modelHash");
+        this.modelHash = modelHash;
         this.label = required(label, "label");
         if (Double.isNaN(confidence) || confidence < 0.0 || confidence > 1.0) {
             throw new IllegalArgumentException("confidence must be between zero and one");
@@ -31,7 +32,7 @@ public final class ProfileEvidence {
     }
 
     private static String required(String value, String field) {
-        if (value == null || value.length() < 3 || value.length() > 128) {
+        if (value == null || !value.matches("[A-Za-z][A-Za-z0-9._:-]{2,127}")) {
             throw new IllegalArgumentException(field + " is required");
         }
         return value;
@@ -51,6 +52,10 @@ public final class ProfileEvidence {
         private final String status;
 
         public Pattern(String kind, String status) {
+            if (!java.util.Arrays.asList("ordering", "conflict", "dependency", "frequency").contains(kind)
+                    || !java.util.Arrays.asList("matched", "violated", "unknown").contains(status)) {
+                throw new IllegalArgumentException("unsupported pattern kind or status");
+            }
             this.kind = required(kind, "pattern kind");
             this.status = required(status, "pattern status");
         }

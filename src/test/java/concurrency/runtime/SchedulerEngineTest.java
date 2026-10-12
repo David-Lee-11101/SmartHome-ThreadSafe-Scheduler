@@ -237,6 +237,67 @@ class SchedulerEngineTest {
     }
 
     @Test
+    void cancellationDuringFinalConditionPreventsAction() throws Exception {
+        AtomicBoolean cancelled = new AtomicBoolean();
+        AtomicInteger checks = new AtomicInteger();
+        engine().execute(singleTaskPlan(), evidence(false, false, 0.9,
+                Collections.<ProfileEvidence.Pattern>emptyList()), (plan, task) -> {
+                    if (checks.incrementAndGet() == 2) cancelled.set(true);
+                    return true;
+                }, (action, token) -> fail("cancelled action must not start"), decision -> { },
+                event -> { }, cancelled::get);
+    }
+
+    @Test
+    void lateDeadlineOrCancellationFromCallbacksPreventsAction() throws Exception {
+        for (boolean fromEvent : new boolean[]{false, true}) {
+            java.util.concurrent.atomic.AtomicLong millis = new java.util.concurrent.atomic.AtomicLong(1000);
+            Clock adjustable = new Clock() {
+                public java.time.ZoneId getZone() { return ZoneOffset.UTC; }
+                public Clock withZone(java.time.ZoneId zone) { return this; }
+                public Instant instant() { return Instant.ofEpochMilli(millis.get()); }
+            };
+            SchedulerEngine executor = new SchedulerEngine(new EvidencePolicy(
+                    new HashSet<>(Collections.singletonList(MODEL_HASH)),
+                    new HashSet<>(Collections.singletonList("model-v1")), 0.8, adjustable),
+                    new ResourceLockManager(), adjustable);
+            AtomicInteger checks = new AtomicInteger();
+            List<ExecutionEvent> events = new ArrayList<>();
+            executor.execute(new SchedulePlan("plan-late", 2000, singleTaskPlan().getTasks()),
+                    evidence(false, false, 0.9, Collections.<ProfileEvidence.Pattern>emptyList()),
+                    (plan, task) -> {
+                        if (checks.incrementAndGet() == 2 && !fromEvent) millis.set(3000);
+                        return true;
+                    }, (action, token) -> fail("expired action must not start"), decision -> { },
+                    event -> {
+                        events.add(event);
+                        if (fromEvent && event.getState() == ExecutionEvent.State.STARTED) millis.set(3000);
+                    }, () -> false);
+            assertEquals(1, events.stream().filter(event -> event.getState() == ExecutionEvent.State.TIMED_OUT).count());
+        }
+        AtomicBoolean cancelled = new AtomicBoolean();
+        engine().execute(singleTaskPlan(), evidence(false, false, 0.9,
+                Collections.<ProfileEvidence.Pattern>emptyList()), (plan, task) -> true,
+                (action, token) -> fail("event-cancelled action must not start"), decision -> { },
+                event -> { if (event.getState() == ExecutionEvent.State.STARTED) cancelled.set(true); }, cancelled::get);
+    }
+
+    @Test
+    void interruptedActionHasOneCancelledTerminalEvent() throws Exception {
+        List<ExecutionEvent> events = new ArrayList<>();
+        try {
+            engine().execute(singleTaskPlan(), evidence(false, false, 0.9,
+                    Collections.<ProfileEvidence.Pattern>emptyList()), (plan, task) -> true,
+                    (action, token) -> { throw new InterruptedException("stopped"); }, decision -> { },
+                    events::add, () -> false);
+            assertTrue(Thread.currentThread().isInterrupted());
+            assertEquals(1, events.stream().filter(event -> event.getState() == ExecutionEvent.State.CANCELLED).count());
+            assertEquals(0, events.stream().filter(event -> event.getState() == ExecutionEvent.State.FAILED
+                    || event.getState() == ExecutionEvent.State.TIMED_OUT).count());
+        } finally { Thread.interrupted(); }
+    }
+
+    @Test
     void identifiersFollowAsciiContractGrammar() {
         assertThrows(IllegalArgumentException.class, () -> new SchedulePlan.Action(
                 "服务-service", "set-state", Collections.<Object>emptyList()));
