@@ -1,0 +1,9 @@
+Sanitized historical shape only. Original device identifiers, response identifiers,
+localized names, and captured command values are intentionally excluded from the
+current tree. This file is not an executable fixture.
+
+request:
+{"params":[{"deviceRef":"synthetic-device","service":2,"property":1,"value":true}]}
+
+response:
+{"code":0,"message":"synthetic-ok","result":[{"deviceRef":"synthetic-device","code":0}]}

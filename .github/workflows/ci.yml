@@ -19,6 +19,8 @@ jobs:
           cache: maven
       - name: Test and package
         run: mvn --batch-mode --no-transfer-progress verify
+      - name: Verify isolated historical research
+        run: python3 tools/check_historical_safety.py
       - name: Run deterministic simulation
         run: >-
           mvn --batch-mode --no-transfer-progress -q exec:java

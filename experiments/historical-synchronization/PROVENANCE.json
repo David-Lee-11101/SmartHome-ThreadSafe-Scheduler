@@ -1,0 +1,10 @@
+{
+  "sourceRepository": "David-Lee-11101/SmartRule-Conflict-Analyzer",
+  "sourceCommit": "cc4ae68d38a9391c931d09c6786ded422a76cb6d",
+  "sourcePath": "Synchronizer",
+  "sourceTreeGitSha1": "725b6a82548bd433ec5292bac5d70951802479f2",
+  "destinationRepositoryBaseline": "8dedd766c7bd492354689fa4e0e87fb92f02c573",
+  "destinationPath": "experiments/historical-synchronization/source",
+  "privacyRewrite": "Private machine paths were replaced by the neutral research-data placeholder in the current tree.",
+  "capabilityBoundary": "Historical synchronization experiments; not the supported scheduler runtime."
+}
