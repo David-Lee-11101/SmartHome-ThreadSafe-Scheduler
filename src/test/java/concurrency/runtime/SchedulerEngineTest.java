@@ -174,6 +174,75 @@ class SchedulerEngineTest {
     }
 
     @Test
+    void tokenOnlyCancellationReleasesPartialLocksPromptly() throws Exception {
+        ResourceLockManager manager = new ResourceLockManager();
+        ResourceLockManager.Lease held = manager.acquire(Collections.<String>emptyList(),
+                Collections.singletonList("resource-b"), 100, () -> false);
+        AtomicBoolean cancelled = new AtomicBoolean();
+        CountDownLatch waiting = new CountDownLatch(1);
+        Thread waiter = new Thread(() -> {
+            try {
+                manager.acquire(Collections.<String>emptyList(), Arrays.asList("resource-a", "resource-b"),
+                        30_000, () -> { waiting.countDown(); return cancelled.get(); }).close();
+            } catch (InterruptedException expected) {
+                // Token cancellation should work without interrupting this worker.
+            }
+        });
+        try {
+            waiter.start();
+            assertTrue(waiting.await(1, TimeUnit.SECONDS));
+            cancelled.set(true);
+            waiter.join(1000);
+            assertFalse(waiter.isAlive(), "token cancellation must not wait for the full deadline");
+            manager.acquire(Collections.<String>emptyList(), Collections.singletonList("resource-a"),
+                    100, () -> false).close();
+        } finally {
+            waiter.interrupt();
+            waiter.join(1000);
+            held.close();
+        }
+    }
+
+    @Test
+    void resourceTimeoutDoesNotPoisonExecutingThread() throws Exception {
+        ResourceLockManager manager = new ResourceLockManager();
+        CountDownLatch held = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        Thread holder = new Thread(() -> {
+            try (ResourceLockManager.Lease ignored = manager.acquire(Collections.<String>emptyList(),
+                    Collections.singletonList("device-a"), 100, () -> false)) {
+                held.countDown();
+                release.await(2, TimeUnit.SECONDS);
+            } catch (InterruptedException failure) { Thread.currentThread().interrupt(); }
+        });
+        holder.start();
+        try {
+            assertTrue(held.await(1, TimeUnit.SECONDS));
+            SchedulePlan timed = new SchedulePlan("plan-timeout", clock.millis() + 50,
+                    singleTaskPlan().getTasks());
+            SchedulerEngine executor = new SchedulerEngine(new EvidencePolicy(
+                    new HashSet<>(Collections.singletonList(MODEL_HASH)),
+                    new HashSet<>(Collections.singletonList("model-v1")), 0.8, clock), manager, clock);
+            List<ExecutionEvent> events = new ArrayList<>();
+            executor.execute(timed, evidence(false, false, 0.9,
+                    Collections.<ProfileEvidence.Pattern>emptyList()), (plan, task) -> true,
+                    (action, token) -> fail("blocked resource must not execute"), decision -> { },
+                    events::add, () -> false);
+            assertFalse(Thread.currentThread().isInterrupted());
+            assertTrue(events.stream().anyMatch(event -> event.getState() == ExecutionEvent.State.TIMED_OUT));
+        } finally {
+            release.countDown();
+            holder.join(1000);
+        }
+    }
+
+    @Test
+    void identifiersFollowAsciiContractGrammar() {
+        assertThrows(IllegalArgumentException.class, () -> new SchedulePlan.Action(
+                "服务-service", "set-state", Collections.<Object>emptyList()));
+    }
+
+    @Test
     void oppositeDeclarationOrderCannotDeadlockAndReadsCanOverlap() throws Exception {
         ResourceLockManager manager = new ResourceLockManager();
         CountDownLatch acquired = new CountDownLatch(2);

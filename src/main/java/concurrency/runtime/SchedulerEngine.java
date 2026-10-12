@@ -85,7 +85,9 @@ public final class SchedulerEngine {
                     throw actionFailure;
                 }
             } catch (InterruptedException interrupted) {
-                Thread.currentThread().interrupt();
+                if (!(interrupted instanceof ResourceLockManager.WaitAbortedException)) {
+                    Thread.currentThread().interrupt();
+                }
                 emit(events, executionId, decision, taskId, sequence,
                         cancellation.isCancelled() ? ExecutionEvent.State.CANCELLED : ExecutionEvent.State.TIMED_OUT,
                         cancellation.isCancelled() ? "CANCELLED" : "RESOURCE_WAIT_TIMEOUT");

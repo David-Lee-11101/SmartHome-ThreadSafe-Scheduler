@@ -24,18 +24,27 @@ public final class ResourceLockManager {
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.max(0, timeoutMillis));
         try {
             for (Request request : requests) {
-                if (cancellation.isCancelled()) throw new InterruptedException("cancelled while waiting for resources");
+                if (cancellation.isCancelled()) throw new WaitAbortedException("cancelled while waiting for resources");
                 ReentrantReadWriteLock resourceLock;
                 synchronized (locks) {
                     resourceLock = locks.computeIfAbsent(request.resource,
                             ignored -> new ReentrantReadWriteLock(true));
                 }
                 Lock lock = request.write ? resourceLock.writeLock() : resourceLock.readLock();
-                long remaining = deadline - System.nanoTime();
-                if (remaining <= 0 || !lock.tryLock(remaining, TimeUnit.NANOSECONDS)) {
-                    throw new InterruptedException("resource acquisition deadline exceeded");
+                while (true) {
+                    if (cancellation.isCancelled()) {
+                        throw new WaitAbortedException("cancelled while waiting for resources");
+                    }
+                    long remaining = deadline - System.nanoTime();
+                    if (remaining <= 0) {
+                        throw new WaitAbortedException("resource acquisition deadline exceeded");
+                    }
+                    if (lock.tryLock(Math.min(remaining, TimeUnit.MILLISECONDS.toNanos(25)),
+                            TimeUnit.NANOSECONDS)) {
+                        acquired.add(lock);
+                        break;
+                    }
                 }
-                acquired.add(lock);
             }
             return new Lease(acquired);
         } catch (InterruptedException failure) {
@@ -56,6 +65,11 @@ public final class ResourceLockManager {
         private final boolean write;
         private Request(String resource, boolean write) { this.resource = resource; this.write = write; }
         private String getResource() { return resource; }
+    }
+
+    /** Token cancellation or deadline expiry, distinct from an external thread interrupt. */
+    public static final class WaitAbortedException extends InterruptedException {
+        private WaitAbortedException(String message) { super(message); }
     }
 
     public static final class Lease implements AutoCloseable {

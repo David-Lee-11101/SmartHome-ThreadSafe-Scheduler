@@ -25,7 +25,7 @@ flowchart LR
 - Resource identifiers are acquired in one stable total order and released in reverse order on success, cancellation, timeout, or failure.
 - Read/read leases may overlap; writes serialize. Opposite declaration order cannot create a lock-order cycle inside this model.
 - Conditions are evaluated before waiting and revalidated after the locks are held.
-- Cancellation while waiting is bounded and partial acquisition is cleaned up.
+- Token cancellation while waiting is checked at intervals of at most 25 ms plus scheduling delay, and partial acquisition is cleaned up. Deadline/token termination does not mark the worker thread as externally interrupted.
 - Callback errors emit a bounded error code without endpoints, paths, arguments, or stack details.
 - Ready tasks are selected before execution; no worker waits for a dependency queued behind it in the same pool.
 

@@ -55,13 +55,8 @@ public final class SchedulePlan {
     }
 
     static String identifier(String value, String field) {
-        if (value == null || value.length() < 3 || value.length() > 128 || !Character.isLetter(value.charAt(0))) {
-            throw new IllegalArgumentException(field + " must be a bounded identifier");
-        }
-        for (char c : value.toCharArray()) {
-            if (!(Character.isLetterOrDigit(c) || c == '.' || c == '_' || c == ':' || c == '-')) {
-                throw new IllegalArgumentException(field + " contains unsupported characters");
-            }
+        if (value == null || !value.matches("[A-Za-z][A-Za-z0-9._:-]{2,127}")) {
+            throw new IllegalArgumentException(field + " must follow the bounded ASCII identifier grammar");
         }
         return value;
     }
