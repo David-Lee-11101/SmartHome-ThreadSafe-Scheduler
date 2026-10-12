@@ -106,6 +106,15 @@ public final class ContractJson {
     }
 
     public static void writeDecisionAtomic(Path path, SchedulingDecision decision) throws IOException {
+        writeDecisionAtomic(path, decision, (source, target) -> Files.move(source, target,
+                StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING));
+    }
+
+    interface AtomicMove {
+        void move(Path source, Path target) throws IOException;
+    }
+
+    static void writeDecisionAtomic(Path path, SchedulingDecision decision, AtomicMove move) throws IOException {
         ObjectNode root = JSON.createObjectNode();
         root.put("schemaVersion", CATALOG_VERSION);
         root.put("decisionId", decision.getDecisionId());
@@ -117,7 +126,7 @@ public final class ContractJson {
         for (String task : decision.getResolvedOrder()) order.add(task);
         root.put("persistedAt", decision.getPersistedAt().toString());
         root.put("actionNotBefore", decision.getPersistedAt().toString());
-        atomicWrite(path, root);
+        atomicWrite(path, root, move);
     }
 
     public static void writeEvents(Path path, List<ExecutionEvent> events) throws IOException {
@@ -156,18 +165,14 @@ public final class ContractJson {
         return root;
     }
 
-    private static void atomicWrite(Path path, JsonNode value) throws IOException {
+    private static void atomicWrite(Path path, JsonNode value, AtomicMove move) throws IOException {
         Path absolute = path.toAbsolutePath();
         Path parent = absolute.getParent();
         if (parent != null) Files.createDirectories(parent);
         Path temporary = Files.createTempFile(parent, ".decision-", ".json");
         try {
             JSON.writerWithDefaultPrettyPrinter().writeValue(temporary.toFile(), value);
-            try {
-                Files.move(temporary, absolute, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            } catch (java.nio.file.AtomicMoveNotSupportedException unsupported) {
-                Files.move(temporary, absolute, StandardCopyOption.REPLACE_EXISTING);
-            }
+            move.move(temporary, absolute);
         } finally {
             Files.deleteIfExists(temporary);
         }

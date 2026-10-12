@@ -145,6 +145,32 @@ class ContractJsonTest {
     }
 
     @Test
+    void unsupportedAtomicPersistencePreservesDecisionAndPreventsAction() throws Exception {
+        Path directory = Files.createTempDirectory("scheduler-atomic-failure-");
+        Path output = directory.resolve("decision.json");
+        Files.write(output, "previous-decision".getBytes("UTF-8"));
+        SchedulePlan plan = ContractJson.readPlan(FIXTURES.resolve("schedule-plan.json"));
+        ProfileEvidence evidence = ContractJson.readEvidence(FIXTURES.resolve("profile-evidence.json"));
+        java.time.Clock clock = java.time.Clock.fixed(Instant.parse("2026-10-12T00:00:00Z"), java.time.ZoneOffset.UTC);
+        concurrency.runtime.SchedulerEngine engine = new concurrency.runtime.SchedulerEngine(
+                new concurrency.runtime.EvidencePolicy(
+                        new java.util.HashSet<>(Collections.singletonList(evidence.getModelHash())),
+                        new java.util.HashSet<>(Collections.singletonList(evidence.getModelVersion())), 0.8, clock),
+                new concurrency.runtime.ResourceLockManager(), clock);
+        java.util.concurrent.atomic.AtomicInteger actions = new java.util.concurrent.atomic.AtomicInteger();
+        assertThrows(java.nio.file.AtomicMoveNotSupportedException.class, () -> engine.execute(
+                plan, evidence, (activePlan, task) -> true, (action, cancellation) -> actions.incrementAndGet(),
+                decision -> ContractJson.writeDecisionAtomic(output, decision, (source, target) -> {
+                    throw new java.nio.file.AtomicMoveNotSupportedException(source.toString(), target.toString(), "unsupported");
+                }), event -> { }, () -> false));
+        assertEquals(0, actions.get());
+        assertEquals("previous-decision", new String(Files.readAllBytes(output), "UTF-8"));
+        try (java.util.stream.Stream<Path> files = Files.list(directory)) {
+            assertEquals(1, files.count(), "temporary decision must be removed");
+        }
+    }
+
+    @Test
     void appendsSanitizedExecutionEventsInSequence() throws Exception {
         Path output = Files.createTempFile("execution-events-", ".jsonl");
         Files.delete(output);

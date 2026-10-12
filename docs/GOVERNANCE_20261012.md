@@ -12,3 +12,7 @@ Fallback inventory: unsupported evidence abstention and anomaly deferral are gro
 ## Independent review follow-up
 
 Before further edits, add regressions for malformed typed action/condition values, unchecked evidence fields and enums, malformed versions/deadline coercion, and condition evaluation that cancels or consumes the action deadline. Reject duplicate JSON keys. Preserve validated typed wrappers for the transport bridge. Recheck cancellation/deadline immediately after the final condition callback.
+
+## Atomic persistence review follow-up
+
+The ordinary-move downgrade hides a lost persistence guarantee and is masking fallback slop. Add a narrow package-private atomic-move injection regression, assert the exception propagates, existing decision bytes remain intact, temporary file is removed, and scheduler actions stay at zero. Remove the downgrade; retain the required atomic move and fail closed when the filesystem cannot provide it.

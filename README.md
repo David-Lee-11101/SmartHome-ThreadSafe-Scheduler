@@ -21,7 +21,7 @@ flowchart LR
 
 - Unknown models, low-confidence, unknown, or ambiguous evidence abstains; anomalous evidence defers.
 - A trusted conflict pattern can produce a deterministic reorder, while dependencies remain validated before execution.
-- The `DecisionStore` completes before the first action callback. Persistence failure authorizes nothing.
+- The `DecisionStore` completes before the first action callback. Persistence failure authorizes nothing. An unavailable filesystem atomic move propagates failure without replacing the prior decision or starting an action.
 - Resource identifiers are acquired in one stable total order and released in reverse order on success, cancellation, timeout, or failure.
 - Read/read leases may overlap; writes serialize. Opposite declaration order cannot create a lock-order cycle inside this model.
 - Typed wrappers, record depth, catalog versions, evidence hashes, identifiers, timestamps, and pattern vocabularies are validated without coercion before side effects. Duplicate JSON keys are rejected.
