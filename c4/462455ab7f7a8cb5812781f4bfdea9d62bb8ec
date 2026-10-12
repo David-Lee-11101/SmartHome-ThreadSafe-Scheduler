@@ -1,0 +1,28 @@
+src/main/java/concurrency/adapter/SchedulerCli.java
+  s_7011714e525495::t_f25d1052c3becf 53
+  s_7011714e525495::t_f44d5a15e0a579 14,23,27-31,73,77-83,86-87,95-101,103,105-107,111-112
+  s_7011714e525495::t_f5deb1201282a1 102,104,108-110
+  s_7011714e525495::t_cad39b082c5896 113
+pom.xml
+  s_7011714e525495::t_f44d5a15e0a579 7
+README.md
+  s_7011714e525495::t_f44d5a15e0a579 36-37
+src/test/java/concurrency/adapter/SchedulerCliTest.java
+  s_7011714e525495::t_f44d5a15e0a579 1-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "c4462455ab7f7a8cb5812781f4bfdea9d62bb8ec",
+  "prompts": {},
+  "sessions": {
+    "s_7011714e525495": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12529-718f-7053-849a-2fa10f2720ee",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "David Lee <109534658+David-Lee-11101@users.noreply.github.com>"
+    }
+  }
+}
