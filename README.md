@@ -33,6 +33,8 @@ flowchart LR
 
 Requirements: JDK 8+ and Maven 3.8+.
 
+Maven coordinate: `io.smarthome:SmartHome-ThreadSafe-Scheduler:1.0-SNAPSHOT`.
+
 ```bash
 mvn test
 mvn -q exec:java \
